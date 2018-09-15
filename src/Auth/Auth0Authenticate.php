@@ -75,9 +75,8 @@ class Auth0Authenticate extends BaseAuthenticate
     public function __construct(ComponentRegistry $registry, $config)
     {
         $defaultConfig = [
-            'supported_algs' => ['RS256', 'HS256'],
+            'supported_algs' => ['RS256'],
             'fields' => ['username' => 'id'],
-            'auth0ClientSecret' => '',
             'auth0Audience' => '',
             'auth0Domain' => ''
         ];
@@ -188,7 +187,6 @@ class Auth0Authenticate extends BaseAuthenticate
                 'supported_algs' => $config['supported_algs'],
                 'valid_audiences' => [$config['auth0Audience']],
                 'authorized_iss' => ['https://' . $config['auth0Domain'] . '/'],
-                'client_secret' => $config['auth0ClientSecret']
             ]);
 
             $this->_token = $token;
