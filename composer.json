@@ -1,0 +1,25 @@
+{
+    "name": "daou/cakephp-auth0-jwt-auth",
+    "type": "cakephp-plugin",
+    "description": "A CakePHP 3 plugin for authenticating using Auth0's PHP SDK",
+    "keywords": [
+        "cakephp",
+        "auth0",
+        "authentication",
+        "jwt"
+    ],
+    "license": "MIT",
+    "homepage": "https://github.com/Daou/cakephp-auth0-jwt-auth",
+    "authors": [
+        {
+            "name":"Andreas Daoutis",
+            "role":"Author",
+            "homepage":"https://github.com/Daou"
+        }
+    ],
+    "require": {
+        "php": ">=5.6.0",
+        "cakephp/cakephp": "^3.5",
+        "auth0/auth0-php": "1.*"
+    }
+}
