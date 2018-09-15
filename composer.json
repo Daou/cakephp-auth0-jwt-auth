@@ -20,6 +20,6 @@
     "require": {
         "php": ">=5.6.0",
         "cakephp/cakephp": "^3.5",
-        "auth0/auth0-php": "1.*"
+        "auth0/auth0-php": "~5.1"
     }
 }
