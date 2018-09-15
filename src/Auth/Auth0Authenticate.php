@@ -59,11 +59,14 @@ class Auth0Authenticate extends BaseAuthenticate
      *
      * Settings for this object.
      *
-     * - `allowedAlgs` - List of supported verification algorithms.
+     * - `supported_algs` - List of supported verification algorithms.
      *   Defaults to ['RS256', 'HS256'].
      * - `fields` - Key `username` denotes the identifier field for fetching user
      *   record. The `sub` claim of JWT must contain identifier value.
      *   Defaults to ['username' => 'id'].
+     * - `auth0ClientSecret` - Needs to be provided if HS256 is getting used
+     * - `auth0Audience` - Required for both algorithms
+     * - `auth0Domain` - Required for both algorithms
      *
      * @param \Cake\Controller\ComponentRegistry $registry The Component registry
      *   used on this request.
@@ -74,6 +77,9 @@ class Auth0Authenticate extends BaseAuthenticate
         $defaultConfig = [
             'supported_algs' => ['RS256', 'HS256'],
             'fields' => ['username' => 'id'],
+            'auth0ClientSecret' => '',
+            'auth0Audience' => '',
+            'auth0Domain' => ''
         ];
 
         $this->setConfig($defaultConfig);
@@ -180,9 +186,9 @@ class Auth0Authenticate extends BaseAuthenticate
         try {
             $verifier = new JWTVerifier([
                 'supported_algs' => $config['supported_algs'],
-                'valid_audiences' => [getenv('AUTH0_AUDIENCE')],
-                'authorized_iss' => ['https://' . getenv('AUTH0_DOMAIN') . '/'],
-                'client_secret' => getenv('AUTH0_CLIENT_SECRET')
+                'valid_audiences' => [$config['auth0Audience']],
+                'authorized_iss' => ['https://' . $config['auth0Domain'] . '/'],
+                'client_secret' => $config['auth0ClientSecret']
             ]);
 
             $this->_token = $token;

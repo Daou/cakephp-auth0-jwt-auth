@@ -41,10 +41,12 @@ Setup `AuthComponent`:
             'storage' => 'Memory',
             'authenticate' => [
                 'Daou/Auth0JwtAuth.Auth0' => [
-                    'userModel' => 'Users',
                     'fields' => [
                         'username' => 'auth0id'
                     ]
+                    'auth0ClientSecret' => '__CLIENT_SECRET__', // only for HS256
+                    'auth0Audience' => '__API_AUDIENCE__',
+                    'auth0Domain' => '__DOMAIN__'
                 ]
             ],
 
