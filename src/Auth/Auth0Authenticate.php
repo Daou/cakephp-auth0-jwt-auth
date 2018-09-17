@@ -114,7 +114,12 @@ class Auth0Authenticate extends BaseAuthenticate
             return false;
         }
 
-        $user = $this->_findUser($payload->sub);
+        $sub = $payload->sub;
+        if (explode('|', $sub) > 1) {
+            $sub = explode('|', $sub)[1];
+        }
+
+        $user = $this->_findUser($sub);
         if (!$user) {
             return false;
         }
