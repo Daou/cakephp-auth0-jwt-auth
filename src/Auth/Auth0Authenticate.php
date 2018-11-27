@@ -121,12 +121,37 @@ class Auth0Authenticate extends BaseAuthenticate
 
         $user = $this->_findUser($sub);
         if (!$user) {
-            return false;
+            $user = $this->_saveUser($sub);
         }
 
         unset($user[$this->_config['fields']['password']]);
 
         return $user;
+    }
+
+
+    /**
+     * Creates new user if user is not in database but token is valid
+     *
+     * @param string $sub auth0 id of user
+     *
+     * @return bool|array User record array or false on failure.
+     */
+
+    protected function _saveUser ($sub) {
+
+        $config = $this->_config;
+        $table = $this->getTableLocator()->get($config['userModel']);
+
+        $user = $table->newEntity();
+
+        $user->auth0id = $sub;
+
+        if ($table->save($user)) {
+            return $this->_findUser($sub);
+        }
+
+        return false;
     }
 
     /**
