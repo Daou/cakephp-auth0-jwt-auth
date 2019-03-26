@@ -2,14 +2,15 @@
 
 namespace Daou\Auth0JwtAuth\Auth;
 
+use Auth0\SDK\Exception\CoreException;
+use Auth0\SDK\JWTVerifier;
 use Cake\Auth\BaseAuthenticate;
-use Cake\Http\ServerRequest;
-use Cake\Http\Response;
 use Cake\Controller\ComponentRegistry;
 use Cake\Core\Configure;
+use Cake\Http\Client;
 use Cake\Http\Exception\UnauthorizedException;
-use Auth0\SDK\JWTVerifier;
-use Auth0\SDK\Exception\CoreException;
+use Cake\Http\Response;
+use Cake\Http\ServerRequest;
 
 /**
  * An authentication adapter for authenticating using Auth0's PHP SDK and JSON Web Tokens.
@@ -78,7 +79,7 @@ class Auth0Authenticate extends BaseAuthenticate
             'supported_algs' => ['RS256'],
             'fields' => ['username' => 'id'],
             'auth0Audience' => '',
-            'auth0Domain' => ''
+            'auth0Domain' => '',
         ];
 
         $this->setConfig($defaultConfig);
@@ -121,12 +122,54 @@ class Auth0Authenticate extends BaseAuthenticate
 
         $user = $this->_findUser($sub);
         if (!$user) {
-            return false;
+            $user = $this->_saveUser($sub, $request);
         }
 
         unset($user[$this->_config['fields']['password']]);
 
         return $user;
+    }
+
+    /**
+     * Creates new user if user is not in database but token is valid
+     *
+     * @param string $sub auth0 id of user
+     *
+     * @return bool|array User record array or false on failure.
+     */
+
+    protected function _saveUser($sub, ServerRequest $request)
+    {
+
+        $config = $this->_config;
+        $table = $this->getTableLocator()->get($config['userModel']);
+
+        $user = $table->newEntity();
+        $user->auth0id = $sub;
+
+        $http = new Client();
+        $response = $http->get('https://' . getenv('AUTH0_DOMAIN') . '/userinfo', [], [
+            'headers' => ['Authorization' => 'Bearer ' . $this->_getToken($request)],
+            'accept' => 'application/json',
+        ]);
+
+        if (!isset($response->json['sub'])) {
+            throw new UnauthorizedException('Error getting user data from Auth0');
+        }
+
+        $data = $response->json;
+        if (isset($data['email'])) {
+            $user->email = $data['email'];
+            if (isset($data['email_verified'])) {
+                $user->verified = $data['email_verified'];
+            }
+        }
+
+        if ($table->save($user)) {
+            return $this->_findUser($sub);
+        }
+
+        return false;
     }
 
     /**
@@ -198,8 +241,7 @@ class Auth0Authenticate extends BaseAuthenticate
 
             return $verifier->verifyAndDecode($token);
 
-        }
-        catch(\Auth0\SDK\Exception\CoreException $e) {
+        } catch (\Auth0\SDK\Exception\CoreException $e) {
             if (Configure::read('debug')) {
                 throw $e;
             }
@@ -223,8 +265,8 @@ class Auth0Authenticate extends BaseAuthenticate
     public function unauthenticated(ServerRequest $request, Response $response)
     {
         $message = $this->_error
-            ? $this->_error->getMessage()
-            : $this->_registry->get('Auth')->getConfig('authError');
+        ? $this->_error->getMessage()
+        : $this->_registry->get('Auth')->getConfig('authError');
 
         throw new UnauthorizedException($message);
     }
