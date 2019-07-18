@@ -116,9 +116,6 @@ class Auth0Authenticate extends BaseAuthenticate
         }
 
         $sub = $payload->sub;
-        if (explode('|', $sub) > 1) {
-            $sub = explode('|', $sub)[1];
-        }
 
         $user = $this->_findUser($sub);
         if (!$user) {
@@ -148,21 +145,14 @@ class Auth0Authenticate extends BaseAuthenticate
         $user->auth0id = $sub;
 
         $http = new Client();
-        $response = $http->get('https://' . getenv('AUTH0_DOMAIN') . '/userinfo', [], [
+        $response = $http->get(getenv('AUTH0_AUDIENCE') . 'users/' . $sub, [], [
             'headers' => ['Authorization' => 'Bearer ' . $this->_getToken($request)],
             'accept' => 'application/json',
         ]);
-
-        if (!isset($response->json['sub'])) {
-            throw new UnauthorizedException('Error getting user data from Auth0');
-        }
-
         $data = $response->json;
-        if (isset($data['email'])) {
-            $user->email = $data['email'];
-            if (isset($data['email_verified'])) {
-                $user->verified = $data['email_verified'];
-            }
+
+        if (!isset($data['user_id'])) {
+            throw new UnauthorizedException('Error getting user data from Auth0');
         }
 
         if ($table->save($user)) {
@@ -240,7 +230,6 @@ class Auth0Authenticate extends BaseAuthenticate
             $this->_token = $token;
 
             return $verifier->verifyAndDecode($token);
-
         } catch (\Auth0\SDK\Exception\CoreException $e) {
             if (Configure::read('debug')) {
                 throw $e;
@@ -265,8 +254,8 @@ class Auth0Authenticate extends BaseAuthenticate
     public function unauthenticated(ServerRequest $request, Response $response)
     {
         $message = $this->_error
-        ? $this->_error->getMessage()
-        : $this->_registry->get('Auth')->getConfig('authError');
+            ? $this->_error->getMessage()
+            : $this->_registry->get('Auth')->getConfig('authError');
 
         throw new UnauthorizedException($message);
     }
