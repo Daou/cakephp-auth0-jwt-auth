@@ -144,17 +144,6 @@ class Auth0Authenticate extends BaseAuthenticate
         $user = $table->newEntity();
         $user->auth0id = $sub;
 
-        $http = new Client();
-        $response = $http->get(getenv('AUTH0_AUDIENCE') . 'users/' . $sub, [], [
-            'headers' => ['Authorization' => 'Bearer ' . $this->_getToken($request)],
-            'accept' => 'application/json',
-        ]);
-        $data = $response->json;
-
-        if (!isset($data['user_id'])) {
-            throw new UnauthorizedException('Error getting user data from Auth0');
-        }
-
         if ($table->save($user)) {
             return $this->_findUser($sub);
         }
