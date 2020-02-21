@@ -212,6 +212,8 @@ class Auth0Authenticate extends BaseAuthenticate
         try {
             $verifier = new JWTVerifier([
                 'supported_algs' => $config['supported_algs'],
+                'client_secret' => $config['auth0ClientSecret'],
+                'secret_base64_encoded' => false,
                 'valid_audiences' => [$config['auth0Audience']],
                 'authorized_iss' => ['https://' . $config['auth0Domain'] . '/'],
             ]);
